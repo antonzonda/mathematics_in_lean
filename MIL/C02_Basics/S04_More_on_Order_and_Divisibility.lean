@@ -31,17 +31,33 @@ example : min a b = min b a := by
   apply h
   apply h
 
-example : min a b = min b a := by
+theorem main_eq : min a b = min b a := by
   apply le_antisymm
   repeat
     apply le_min
     apply min_le_right
     apply min_le_left
 
+
 example : max a b = max b a := by
-  sorry
+  apply le_antisymm
+  repeat
+    apply max_le
+    apply le_max_right
+    apply le_max_left
+
+
 example : min (min a b) c = min a (min b c) := by
-  sorry
+  apply le_antisymm
+  · apply le_min
+    · apply le_trans
+      apply min_le_left
+      apply min_le_left
+
+
+
+
+
 theorem aux : min a b + c ≤ min (a + c) (b + c) := by
   sorry
 example : min a b + c = min (a + c) (b + c) := by
@@ -80,5 +96,3 @@ variable (m n : ℕ)
 example : Nat.gcd m n = Nat.gcd n m := by
   sorry
 end
-
-

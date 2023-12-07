@@ -44,7 +44,13 @@ example (x : ℝ) : x ≤ x :=
 
 -- Try this.
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
-  sorry
+  apply lt_of_le_of_lt
+  · apply h₀
+  · apply lt_trans
+    · apply h₁
+    · apply lt_of_le_of_lt
+      · apply h₂
+      · apply h₃
 
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
   linarith
@@ -86,22 +92,34 @@ example (h₀ : a ≤ b) (h₁ : c < d) : a + exp c + e < b + exp d + e := by
     apply exp_lt_exp.mpr h₁
   apply le_refl
 
-example (h₀ : d ≤ e) : c + exp (a + d) ≤ c + exp (a + e) := by sorry
+example (h₀ : d ≤ e) : c + exp (a + d) ≤ c + exp (a + e) := by
+  apply add_le_add_left
+  apply exp_le_exp.mpr
+  apply add_le_add_left h₀
 
 example : (0 : ℝ) < 1 := by norm_num
 
 example (h : a ≤ b) : log (1 + exp a) ≤ log (1 + exp b) := by
-  have h₀ : 0 < 1 + exp a := by sorry
-  have h₁ : 0 < 1 + exp b := by sorry
+  have h₀ : 0 < 1 + exp a := by
+    apply add_pos
+    · norm_num
+    · exact exp_pos a
+  have h₁ : 0 < 1 + exp b := by
+    apply add_pos
+    · norm_num
+    · exact exp_pos b
   apply (log_le_log h₀ h₁).mpr
-  sorry
+  apply add_le_add_left
+  apply exp_le_exp.mpr h
 
 example : 0 ≤ a ^ 2 := by
-  -- apply?
-  exact sq_nonneg a
+    -- apply?
+    exact sq_nonneg a
 
 example (h : a ≤ b) : c - exp b ≤ c - exp a := by
-  sorry
+  apply add_le_add_left
+  apply neg_le_neg
+  apply exp_le_exp.mpr h
 
 example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
   have h : 0 ≤ a ^ 2 - 2 * a * b + b ^ 2
@@ -123,8 +141,23 @@ example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
     _ ≥ 0 := by apply pow_two_nonneg
   linarith
 
+theorem fact1 : a * b ≤ (a ^ 2 + b ^ 2) / 2 := by
+  have h₀ : 0 ≤ a ^ 2 + b ^ 2 - 2 * a * b
+  calc
+    a ^ 2 + b ^ 2 - 2 * a * b = (a - b) ^ 2 := by ring
+    _ ≥ 0 := by apply pow_two_nonneg
+  linarith
+
+
 example : |a * b| ≤ (a ^ 2 + b ^ 2) / 2 := by
-  sorry
+
+  have h₄ : -(a * b) ≤ (a ^ 2 + b ^ 2) / 2 := by
+    rw [neg_mul_eq_neg_mul a b, ← neg_sq a]
+    apply fact1 (-a) b
+
+  apply abs_le'.mpr
+
+  exact {left := fact1 a b, right := h₄}
+
 
 #check abs_le'.mpr
-
