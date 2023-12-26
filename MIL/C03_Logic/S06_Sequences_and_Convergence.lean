@@ -19,10 +19,10 @@ example {a : ℝ} (h : 1 < a) : a < a * a := by
   · rw [one_mul]
   exact lt_trans zero_lt_one h
 
-theorem convergesTo_const (a : ℝ) : ConvergesTo (fun x : ℕ ↦ a) a := by
+theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _ : ℕ ↦ a) a := by
   intro ε εpos
   use 0
-  intro n nge
+  intro n _
   rw [sub_self, abs_zero]
   apply εpos
 
@@ -35,7 +35,19 @@ theorem convergesTo_add {s t : ℕ → ℝ} {a b : ℝ}
   rcases cs (ε / 2) ε2pos with ⟨Ns, hs⟩
   rcases ct (ε / 2) ε2pos with ⟨Nt, ht⟩
   use max Ns Nt
-  sorry
+  intro n nMax
+  have ngeNs : n ≥ Ns := le_of_max_le_left nMax
+  have ngeNt : n ≥ Nt := le_of_max_le_right nMax
+  have eq : |s n + t n - (a + b)| = |(s n - a) + (t n - b)| := by
+    congr
+    linarith
+  rw [eq]
+  have absleq := abs_add (s n - a) (t n - b)
+  have addlt := add_lt_add (hs n ngeNs) (ht n ngeNt)
+  have epseq : ε / 2 + ε / 2 = ε := by linarith
+  rw [epseq] at addlt
+  apply lt_of_le_of_lt absleq addlt
+
 
 theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : ConvergesTo s a) :
     ConvergesTo (fun n ↦ c * s n) (c * a) := by
@@ -46,13 +58,24 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : Conver
     rw [h]
     ring
   have acpos : 0 < |c| := abs_pos.mpr h
-  sorry
+  intro ε epso
+  have ecpos : 0 < ε / |c| := div_pos epso acpos
+  rcases cs (ε / |c|) ecpos with ⟨N, h₁⟩
+  use N
+  intro n ngeN
+  dsimp
+  rw [← mul_sub, abs_mul, mul_comm]
+  have h₂ := h₁ n ngeN
+  apply (lt_div_iff acpos).mp h₂
+
 
 theorem exists_abs_le_of_convergesTo {s : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) :
     ∃ N b, ∀ n, N ≤ n → |s n| < b := by
   rcases cs 1 zero_lt_one with ⟨N, h⟩
   use N, |a| + 1
-  sorry
+  intro n Nlen
+  have snlea : |s n| - |a| < 1:= lt_of_le_of_lt (abs_sub_abs_le_abs_sub (s n) a) (h n Nlen)
+  linarith
 
 theorem aux {s t : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) (ct : ConvergesTo t 0) :
     ConvergesTo (fun n ↦ s n * t n) 0 := by
@@ -62,7 +85,18 @@ theorem aux {s t : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) (ct : Converges
   have Bpos : 0 < B := lt_of_le_of_lt (abs_nonneg _) (h₀ N₀ (le_refl _))
   have pos₀ : ε / B > 0 := div_pos εpos Bpos
   rcases ct _ pos₀ with ⟨N₁, h₁⟩
-  sorry
+  use max N₀ N₁
+  intro n nMax
+  have ngeNs : n ≥ N₀ := le_of_max_le_left nMax
+  have ngeNt : n ≥ N₁ := le_of_max_le_right nMax
+  rw [sub_zero, abs_mul]
+ -- have epsB : B * (ε / B) = ε := sorry
+  have g₁ := h₁ n ngeNt
+  rw [sub_zero] at g₁
+  have g₂ := h₀ n ngeNs
+  have g₃ := mul_lt_mul'' g₁ g₂ (abs_nonneg (t n)) (abs_nonneg (s n))
+  rw [div_mul_cancel ε (ne_of_gt Bpos), mul_comm] at g₃
+  apply g₃
 
 theorem convergesTo_mul {s t : ℕ → ℝ} {a b : ℝ}
       (cs : ConvergesTo s a) (ct : ConvergesTo t b) :
@@ -80,7 +114,11 @@ theorem convergesTo_unique {s : ℕ → ℝ} {a b : ℝ}
       (sa : ConvergesTo s a) (sb : ConvergesTo s b) :
     a = b := by
   by_contra abne
-  have : |a - b| > 0 := by sorry
+
+  have : |a - b| > 0 := by
+    apply abs_pos.mpr
+    rw [sub_ne_zero]
+    apply abne
   let ε := |a - b| / 2
   have εpos : ε > 0 := by
     change |a - b| / 2 > 0
@@ -88,9 +126,19 @@ theorem convergesTo_unique {s : ℕ → ℝ} {a b : ℝ}
   rcases sa ε εpos with ⟨Na, hNa⟩
   rcases sb ε εpos with ⟨Nb, hNb⟩
   let N := max Na Nb
-  have absa : |s N - a| < ε := by sorry
-  have absb : |s N - b| < ε := by sorry
-  have : |a - b| < |a - b| := by sorry
+  have absa : |s N - a| < ε := hNa N (le_max_left Na Nb)
+
+  have absb : |s N - b| < ε := hNb N (le_max_right Na Nb)
+  have : |a - b| < |a - b| := by
+    have g₁ :=  abs_sub (s N - a) (s N - b)
+    rw [← sub_add (s N - a) (s N) b, sub_right_comm, sub_self, zero_sub, ← sub_eq_neg_add ] at g₁
+    rw [←neg_sub, abs_neg ] at g₁
+
+    have g₂ := add_lt_add_of_lt_of_lt absa absb
+    have g₃ : ε + ε = |a - b| := by apply add_halves
+    rw [g₃] at g₂
+    apply lt_of_le_of_lt g₁ g₂
+
   exact lt_irrefl _ this
 
 section
@@ -100,4 +148,3 @@ def ConvergesTo' (s : α → ℝ) (a : ℝ) :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
 
 end
-
