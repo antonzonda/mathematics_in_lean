@@ -34,49 +34,170 @@ example : s ⊆ f ⁻¹' (f '' s) := by
   use x, xs
 
 example : f '' s ⊆ v ↔ s ⊆ f ⁻¹' v := by
-  sorry
+  constructor
+  · intro h x xs
+    have g₀ : f x ∈ f '' s
+    · use x
+    have g : f x ∈ v
+    · apply h
+      apply g₀
+    simp
+    exact g
+  · intro h
+    simp
+    exact h
+
 
 example (h : Injective f) : f ⁻¹' (f '' s) ⊆ s := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨x₁, h₁⟩
+  rcases h₁ with ⟨h₂, h₃⟩
+  have g₁ : x = x₁
+  · apply h
+    rw [h₃]
+  rw [g₁]
+  exact h₂
 
 example : f '' (f ⁻¹' u) ⊆ u := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨x₁, ⟨h₁, h₂⟩⟩
+  rw [h₂] at h₁
+  exact h₁
 
 example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
-  sorry
+  intro x g
+  simp
+  have g₁ := h x
+  rcases g₁ with ⟨y, H⟩
+  exists y
+  constructor
+  · rw [H]
+    exact g
+  · exact H
 
 example (h : s ⊆ t) : f '' s ⊆ f '' t := by
-  sorry
+  intro x g
+  simp
+  simp at g
+  rcases g with ⟨x₁, ⟨g₁, g₂⟩⟩
+  have g₁ : x₁ ∈ t
+  · apply h
+    apply g₁
+  exists x₁
+
 
 example (h : u ⊆ v) : f ⁻¹' u ⊆ f ⁻¹' v := by
-  sorry
+  intro x g
+  simp
+  simp at g
+  apply h
+  exact g
 
 example : f ⁻¹' (u ∪ v) = f ⁻¹' u ∪ f ⁻¹' v := by
-  sorry
+  simp
 
 example : f '' (s ∩ t) ⊆ f '' s ∩ f '' t := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨y, ⟨⟨g₀, g₂⟩, g₁⟩⟩
+  simp
+  constructor
+  · exists y
+  · exists y
 
 example (h : Injective f) : f '' s ∩ f '' t ⊆ f '' (s ∩ t) := by
-  sorry
+  intro x g
+  simp
+  simp at g
+  rcases g with ⟨⟨y₀, ⟨g₀₀, g₀₁⟩⟩, ⟨y₁, ⟨g₁₀, g₁₁⟩⟩⟩
+  have yeq : y₀ = y₁
+  . apply h
+    rw [g₀₁, g₁₁]
+  exists y₀
+  constructor
+  · constructor
+    exact g₀₀
+    rw [yeq]
+    exact g₁₀
+  · exact g₀₁
 
 example : f '' s \ f '' t ⊆ f '' (s \ t) := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨⟨y, ⟨g₀₀, g₀₁⟩ ⟩, g₁⟩
+  simp
+  exists y
+  constructor
+  · constructor
+    · exact g₀₀
+    · intro c
+      have contra := g₁ y c g₀₁
+      exact contra
+  · exact g₀₁
+
 
 example : f ⁻¹' u \ f ⁻¹' v ⊆ f ⁻¹' (u \ v) := by
-  sorry
+  intro x g
+  simp at g
+  simp
+  rcases g with ⟨g₁, g₂⟩
+  constructor
+  · exact g₁
+  · exact g₂
 
 example : f '' s ∩ v = f '' (s ∩ f ⁻¹' v) := by
-  sorry
+  apply Subset.antisymm
+  · intro x g
+    simp at g
+    rcases g with ⟨⟨y, ⟨g₁, g₂⟩⟩, g₃⟩
+    simp
+    exists y
+    constructor
+    · constructor
+      exact g₁
+      rw [g₂]
+      exact g₃
+    · exact g₂
+  · intro x g
+    simp at g
+    rcases g with ⟨y, ⟨⟨g₁, g₂⟩, g₃⟩⟩
+    simp
+    constructor
+    · exists y
+    · rw [g₃] at g₂
+      exact g₂
 
 example : f '' (s ∩ f ⁻¹' u) ⊆ f '' s ∩ u := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨y, ⟨⟨g₁, g₂⟩, g₃⟩⟩
+  simp
+  constructor
+  · exists y
+  · rewrite [g₃] at g₂
+    exact g₂
 
 example : s ∩ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∩ u) := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with ⟨g₁, g₂⟩
+  simp
+  constructor
+  · exists x
+  · exact g₂
 
 example : s ∪ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∪ u) := by
-  sorry
+  intro x g
+  simp at g
+  rcases g with h | h
+  · simp
+    left
+    exists x
+  · simp
+    right
+    exact h
 
 variable {I : Type*} (A : I → Set α) (B : I → Set β)
 
@@ -97,7 +218,7 @@ example : (f '' ⋂ i, A i) ⊆ ⋂ i, f '' A i := by
 example (i : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i := by
   intro y; simp
   intro h
-  rcases h i with ⟨x, xAi, fxeq⟩
+  rcases h i with ⟨x, _, fxeq⟩
   use x; constructor
   · intro i'
     rcases h i' with ⟨x', x'Ai, fx'eq⟩
@@ -143,16 +264,64 @@ example : range exp = { y | y > 0 } := by
   rw [exp_log ypos]
 
 example : InjOn sqrt { x | x ≥ 0 } := by
-  sorry
+  intro x H₁ y H₂ e
+  calc
+    x =  (sqrt x) ^ 2 := by
+      rw [sq_sqrt]
+      simp at H₁
+      exact H₁
+    _ = (sqrt y) ^ 2 := by
+      rw [e]
+    _ = y := by
+      rw [sq_sqrt]
+      simp at H₂
+      exact H₂
 
 example : InjOn (fun x ↦ x ^ 2) { x : ℝ | x ≥ 0 } := by
-  sorry
+  intro x H₁ y H₂ e
+  simp at e
+  calc
+    x = sqrt (x ^ 2) := by
+      rw [sqrt_sq]
+      simp at H₁
+      exact H₁
+    _ = sqrt (y ^ 2) := by rw [e]
+    _ = y := by
+      rw [sqrt_sq]
+      simp at H₂
+      exact H₂
 
 example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
-  sorry
+  apply Subset.antisymm
+  · intro x g
+    simp at g
+    rcases g with ⟨z, ⟨_, g₂⟩⟩
+    simp
+    rw [← g₂]
+    apply sqrt_nonneg
+  · intro x g
+    simp at g
+    simp
+    exists (x ^ 2)
+    constructor
+    · apply pow_two_nonneg
+    · rw [sqrt_sq]
+      exact g
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
-  sorry
+  apply Subset.antisymm
+  · intro x g
+    simp at g
+    rcases g with ⟨y, H⟩
+    simp
+    rewrite [← H]
+    apply pow_two_nonneg
+  · intro x g
+    simp at g
+    simp
+    exists (sqrt x)
+    rw [sq_sqrt]
+    exact g
 
 end
 
@@ -183,11 +352,43 @@ variable (f : α → β)
 
 open Function
 
-example : Injective f ↔ LeftInverse (inverse f) f :=
-  sorry
+example : Injective f ↔ LeftInverse (inverse f) f := by
+  constructor
+  · intro g
+    unfold LeftInverse
+    intro x
+    unfold Injective at g
+    have g₁ : f (inverse f (f x)) = f x
+    · apply inverse_spec
+      exists x
+    apply g
+    exact g₁
+  · intro g
+    unfold LeftInverse at g
+    unfold Injective
+    intro x y H
+    have G : inverse f (f x) = inverse f (f y)
+    · rw [H]
+    rw [g, g] at G
+    exact G
 
-example : Surjective f ↔ RightInverse (inverse f) f :=
-  sorry
+example : Surjective f ↔ RightInverse (inverse f) f := by
+  constructor
+  · intro g
+    unfold Function.RightInverse
+    unfold LeftInverse
+    intro x
+    apply inverse_spec
+    unfold Surjective at g
+    rcases (g x) with ⟨y, Hy⟩
+    exists y
+  · intro g
+    unfold Function.RightInverse at g
+    unfold LeftInverse at g
+    unfold Surjective
+    intro y
+    exists (inverse f y)
+    apply g
 
 end
 
@@ -204,9 +405,11 @@ theorem Cantor : ∀ f : α → Set α, ¬Surjective f := by
     have : j ∉ f j := by rwa [h] at h'
     contradiction
   have h₂ : j ∈ S
-  sorry
+  · simp
+    exact h₁
   have h₃ : j ∉ S
-  sorry
+  · rw [h] at h₁
+    exact h₁
   contradiction
 
 -- COMMENTS: TODO: improve this
