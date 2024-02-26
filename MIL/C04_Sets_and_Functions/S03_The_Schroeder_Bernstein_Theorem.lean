@@ -23,17 +23,25 @@ def sbFun (x : α) : β :=
   if x ∈ sbSet f g then f x else invFun g x
 
 theorem sb_right_inv {x : α} (hx : x ∉ sbSet f g) : g (invFun g x) = x := by
-  have : x ∈ g '' univ := by
+  have g₁ : x ∈ g '' univ := by
     contrapose! hx
     rw [sbSet, mem_iUnion]
     use 0
     rw [sbAux, mem_diff]
-    sorry
-  have : ∃ y, g y = x := by
-    sorry
-  sorry
+    constructor
+    · simp at hx
+      simp
+    · simp at hx
+      simp
+      apply hx
+  have g₂ : ∃ y, g y = x := by
+    simp at g₁
+    apply g₁
+  unfold invFun
+  rw [dif_pos g₂]
+  apply Exists.choose_spec g₂
 
-theorem sb_injective (hf : Injective f) (hg : Injective g) : Injective (sbFun f g) := by
+theorem sb_injective (hf : Injective f) (_ : Injective g) : Injective (sbFun f g) := by
   set A := sbSet f g with A_def
   set h := sbFun f g with h_def
   intro x₁ x₂
@@ -50,17 +58,24 @@ theorem sb_injective (hf : Injective f) (hg : Injective g) : Injective (sbFun f 
       rw [if_pos x₁A, if_neg x₂nA] at hxeq
       rw [A_def, sbSet, mem_iUnion] at x₁A
       have x₂eq : x₂ = g (f x₁) := by
-        sorry
+        simp at x₂nA
+        rw [hxeq, sb_right_inv f g]
+        apply x₂nA
+
       rcases x₁A with ⟨n, hn⟩
       rw [A_def, sbSet, mem_iUnion]
       use n + 1
       simp [sbAux]
       exact ⟨x₁, hn, x₂eq.symm⟩
-    sorry
+    rw [if_pos x₁A, if_pos x₂A] at hxeq
+    apply hf
+    exact hxeq
   push_neg  at xA
-  sorry
+  rcases xA with ⟨x₁A, x₂A⟩
+  rw [if_neg x₁A, if_neg x₂A] at hxeq
+  rw [← sb_right_inv f g x₁A, ← sb_right_inv f g x₂A, hxeq]
 
-theorem sb_surjective (hf : Injective f) (hg : Injective g) : Surjective (sbFun f g) := by
+theorem sb_surjective (_ : Injective f) (hg : Injective g) : Surjective (sbFun f g) := by
   set A := sbSet f g with A_def
   set h := sbFun f g with h_def
   intro y
@@ -77,7 +92,16 @@ theorem sb_surjective (hf : Injective f) (hg : Injective g) : Surjective (sbFun 
       exact ⟨n, xmem⟩
     simp only [h_def, sbFun, if_pos this]
     exact hg hx
-  sorry
+  exists (g y)
+  simp
+  unfold sbFun
+  rw [if_neg gyA]
+  unfold invFun
+  have h₁ : ∃ x, g x = g y := by
+    exists y
+  rw [dif_pos h₁]
+  apply hg
+  rw [Exists.choose_spec h₁]
 
 end
 
